@@ -1,0 +1,18 @@
+[Unit]
+Description=Smuggler Slots Discord Bot
+After=network.target
+
+[Service]
+Type=simple
+# ── CHANGE "ubuntu" to your actual VPS username ──
+User=ubuntu
+WorkingDirectory=/home/ubuntu/smuggler-slots-bot
+EnvironmentFile=/home/ubuntu/smuggler-slots-bot/.env
+ExecStart=/usr/bin/python3 /home/ubuntu/smuggler-slots-bot/bot.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
