@@ -16,7 +16,7 @@ const path = require("path");
 // ══════════════════════════════════════════════
 //  CONFIG
 // ══════════════════════════════════════════════
-const TOKEN = process.env.DISCORD_TOKEN || "MTUxODU2NTQ3MzU0Nzk4MDgwMQ.Gd3aZ4.xtcaeus_dkLALF_VKp-DLzcYGV4Dr1BGKbCQ0g";
+const TOKEN = process.env.DISCORD_TOKEN;
 const GUILD_ID = process.env.GUILD_ID        || "1495786428490059866";
 const MOD_ROLE = process.env.MOD_ROLE        || "Slot Manager";
 const MAX_HERE = parseInt(process.env.MAX_HERE_PINGS || "2");
@@ -116,7 +116,6 @@ function errEmbed(desc) {
   return new EmbedBuilder().setTitle("❌ Error").setDescription(desc).setColor(0xff0000);
 }
 
-// Slot Info embed — matches the reference image exactly
 function buildSlotInfoEmbed(slot, botUser) {
   const thumb      = BOT_THUMB || botUser.displayAvatarURL();
   const createdVal = `\`${fmtRelative(slot.created_at)}\``;
@@ -139,7 +138,6 @@ function buildSlotInfoEmbed(slot, botUser) {
     .setFooter({ text: "Smuggler Slots • Professional Slot Management" });
 }
 
-// Ticket panel embed — professional purple aesthetic
 function buildTicketPanelEmbed(cfg, botUser) {
   const color = parseInt(cfg.panel_color || "b000ff", 16);
   const thumb = BOT_THUMB || botUser.displayAvatarURL();
@@ -157,7 +155,6 @@ function buildTicketPanelEmbed(cfg, botUser) {
     .setTimestamp();
 }
 
-// Ticket open embed — shown inside the new ticket channel
 function buildTicketOpenEmbed(user, ticketNum, cfg, botUser) {
   const color = parseInt(cfg.panel_color || "b000ff", 16);
   const thumb = BOT_THUMB || botUser.displayAvatarURL();
@@ -179,7 +176,6 @@ function buildTicketOpenEmbed(user, ticketNum, cfg, botUser) {
 //  SLASH COMMANDS DEFINITION
 // ══════════════════════════════════════════════
 const commands = [
-  // ── /slot ──────────────────────────────────
   new SlashCommandBuilder()
     .setName("slot")
     .setDescription("Smuggler Slots management")
@@ -214,14 +210,12 @@ const commands = [
       .addUserOption(o => o.setName("user").setDescription("Slot holder").setRequired(true))
       .addStringOption(o => o.setName("text").setDescription("Note text").setRequired(true))),
 
-  // ── /send ──────────────────────────────────
   new SlashCommandBuilder()
     .setName("send")
     .setDescription("Send a message to a channel as the bot")
     .addStringOption(o => o.setName("message").setDescription("The message to send").setRequired(true))
     .addChannelOption(o => o.setName("channel").setDescription("Target channel (defaults to current)")),
 
-  // ── /ticket ────────────────────────────────
   new SlashCommandBuilder()
     .setName("ticket")
     .setDescription("Ticket system management")
@@ -287,7 +281,6 @@ client.once("ready", async () => {
 // ══════════════════════════════════════════════
 client.on("interactionCreate", async interaction => {
   try {
-    // ── Buttons ──────────────────────────────
     if (interaction.isButton()) {
       if (interaction.customId === "ticket_open")  return await handleTicketOpen(interaction);
       if (interaction.customId === "ticket_close") return await handleTicketClose(interaction);
@@ -296,7 +289,6 @@ client.on("interactionCreate", async interaction => {
 
     if (!interaction.isChatInputCommand()) return;
 
-    // ── Permission guard (not needed for /send public facing) ──
     const cmd = interaction.commandName;
     const sub = interaction.options.getSubcommand(false);
 
@@ -345,10 +337,7 @@ function permDenied() {
 // ══════════════════════════════════════════════
 //  SLOT COMMANDS
 // ══════════════════════════════════════════════
-
-// /slot create — ephemeral ACK, public slot info embed via channel.send
 async function cmdCreate(i) {
-  // Reply ephemerally so "X used /slot create" is only visible to the mod
   await i.deferReply({ ephemeral: true });
 
   const user     = i.options.getUser("user");
@@ -374,14 +363,10 @@ async function cmdCreate(i) {
   logAction(result.lastInsertRowid, "create", i.user.id);
   const slot = db.prepare("SELECT * FROM slots WHERE id=?").get(result.lastInsertRowid);
 
-  // Send the public Slot Info embed directly in the channel (no interaction trace)
   await i.channel.send({ content: `<@${user.id}>`, embeds: [buildSlotInfoEmbed(slot, client.user)] });
-
-  // Quietly confirm to the mod (ephemeral, only they see it)
   await i.editReply({ content: "✅ Slot created." });
 }
 
-// /slot revoke
 async function cmdRevoke(i) {
   await i.deferReply({ ephemeral: true });
   const user   = i.options.getUser("user");
@@ -416,7 +401,6 @@ async function cmdRevoke(i) {
   } catch {}
 }
 
-// /slot hold
 async function cmdHold(i) {
   await i.deferReply({ ephemeral: true });
   const user   = i.options.getUser("user");
@@ -451,7 +435,6 @@ async function cmdHold(i) {
   } catch {}
 }
 
-// /slot release
 async function cmdRelease(i) {
   await i.deferReply({ ephemeral: true });
   const user = i.options.getUser("user");
@@ -483,7 +466,6 @@ async function cmdRelease(i) {
   } catch {}
 }
 
-// /slot warn
 async function cmdWarn(i) {
   await i.deferReply({ ephemeral: true });
   const user   = i.options.getUser("user");
@@ -523,7 +505,6 @@ async function cmdWarn(i) {
     .setTimestamp()] });
 }
 
-// /slot transfer
 async function cmdTransfer(i) {
   await i.deferReply({ ephemeral: true });
   const fromUser = i.options.getUser("from");
@@ -562,7 +543,6 @@ async function cmdTransfer(i) {
   await i.editReply({ content: "✅ Done." });
 }
 
-// /slot timer
 async function cmdTimer(i) {
   await i.deferReply({ ephemeral: true });
   const user  = i.options.getUser("user");
@@ -593,7 +573,6 @@ async function cmdTimer(i) {
     .setTimestamp()] });
 }
 
-// /slot extend
 async function cmdExtend(i) {
   await i.deferReply({ ephemeral: true });
   const user  = i.options.getUser("user");
@@ -623,7 +602,6 @@ async function cmdExtend(i) {
     .setTimestamp()] });
 }
 
-// /slot info
 async function cmdInfo(i) {
   await i.deferReply({ ephemeral: true });
   const user = i.options.getUser("user");
@@ -651,7 +629,6 @@ async function cmdInfo(i) {
   await i.editReply({ embeds: [embed] });
 }
 
-// /slot list
 async function cmdList(i) {
   await i.deferReply({ ephemeral: true });
 
@@ -685,7 +662,6 @@ async function cmdList(i) {
   await i.editReply({ embeds: [embed] });
 }
 
-// /slot note
 async function cmdNote(i) {
   await i.deferReply({ ephemeral: true });
   const user = i.options.getUser("user");
@@ -723,8 +699,6 @@ async function cmdSend(i) {
 // ══════════════════════════════════════════════
 //  TICKET COMMANDS
 // ══════════════════════════════════════════════
-
-// /ticket setup
 async function cmdTicketSetup(i) {
   await i.deferReply({ ephemeral: true });
 
@@ -735,7 +709,6 @@ async function cmdTicketSetup(i) {
   const intro     = i.options.getString("intro")       || "A staff member will be with you shortly. Please describe your issue in detail.";
   const logCh     = i.options.getChannel("log_channel");
 
-  // Save config
   db.prepare(`
     INSERT INTO ticket_config (guild_id, staff_role_id, panel_title, panel_desc, ticket_intro, log_channel_id)
     VALUES (?, ?, ?, ?, ?, ?)
@@ -749,7 +722,6 @@ async function cmdTicketSetup(i) {
 
   const cfg = db.prepare("SELECT * FROM ticket_config WHERE guild_id=?").get(String(i.guildId));
 
-  // Build the panel
   const panelEmbed = buildTicketPanelEmbed(cfg, client.user);
   const openBtn = new ButtonBuilder()
     .setCustomId("ticket_open")
@@ -761,11 +733,9 @@ async function cmdTicketSetup(i) {
   await i.editReply({ content: `✅ Ticket panel sent to <#${channel.id}>.` });
 }
 
-// /ticket config — update text without resending panel
 async function cmdTicketConfig(i) {
   await i.deferReply({ ephemeral: true });
 
-  const updates = {};
   const title = i.options.getString("title");
   const desc  = i.options.getString("description");
   const intro = i.options.getString("intro");
@@ -788,7 +758,6 @@ async function cmdTicketConfig(i) {
     .setColor(EMBED_COLOR)] });
 }
 
-// Button: open ticket
 async function handleTicketOpen(interaction) {
   await interaction.deferReply({ ephemeral: true });
 
@@ -796,7 +765,6 @@ async function handleTicketOpen(interaction) {
   const user  = interaction.user;
   const cfg   = db.prepare("SELECT * FROM ticket_config WHERE guild_id=?").get(String(guild.id));
 
-  // Check if user already has an open ticket
   const existing = db.prepare(
     "SELECT * FROM tickets WHERE guild_id=? AND user_id=? AND status='open'"
   ).get(String(guild.id), String(user.id));
@@ -805,11 +773,9 @@ async function handleTicketOpen(interaction) {
     return interaction.editReply({ content: `❌ You already have an open ticket: <#${existing.channel_id}>` });
   }
 
-  // Count tickets for numbering
   const count = db.prepare("SELECT COUNT(*) as c FROM tickets WHERE guild_id=?").get(String(guild.id));
   const ticketNum = (count.c || 0) + 1;
 
-  // Permission overwrites
   const overwrites = [
     { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
     { id: user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] },
@@ -830,14 +796,10 @@ async function handleTicketOpen(interaction) {
     ...(cfg?.category_id ? { parent: cfg.category_id } : {})
   });
 
-  // Save to DB
   db.prepare(
     "INSERT INTO tickets (guild_id, channel_id, user_id, status, created_at) VALUES (?,?,?,?,?)"
   ).run(String(guild.id), String(ticketChannel.id), String(user.id), "open", nowStr());
 
-  const ticket = db.prepare("SELECT * FROM tickets WHERE channel_id=?").get(String(ticketChannel.id));
-
-  // Build open embed + close button
   const openEmbed = buildTicketOpenEmbed(user, ticketNum, cfg || {
     panel_color: "b000ff",
     ticket_intro: "A staff member will be with you shortly. Please describe your issue in detail."
@@ -855,7 +817,6 @@ async function handleTicketOpen(interaction) {
     components: [row]
   });
 
-  // Log if configured
   if (cfg?.log_channel_id) {
     const logCh = guild.channels.cache.get(cfg.log_channel_id);
     if (logCh) await logCh.send({ embeds: [new EmbedBuilder()
@@ -872,7 +833,6 @@ async function handleTicketOpen(interaction) {
   await interaction.editReply({ content: `✅ Your ticket has been created: <#${ticketChannel.id}>` });
 }
 
-// Button: close ticket
 async function handleTicketClose(interaction) {
   await interaction.deferReply({ ephemeral: false });
 
@@ -882,7 +842,6 @@ async function handleTicketClose(interaction) {
 
   if (!ticket) return interaction.editReply({ content: "❌ This is not an open ticket channel." });
 
-  // Only staff or the ticket owner can close
   const isMod   = hasMod(interaction.member);
   const isOwner = ticket.user_id === String(interaction.user.id);
   if (!isMod && !isOwner) return interaction.editReply({ content: "❌ Only staff or the ticket owner can close this ticket." });
@@ -899,7 +858,6 @@ async function handleTicketClose(interaction) {
     .setColor(color)
     .setTimestamp()] });
 
-  // Log
   if (cfg?.log_channel_id) {
     const logCh = interaction.guild.channels.cache.get(cfg.log_channel_id);
     if (logCh) await logCh.send({ embeds: [new EmbedBuilder()
@@ -915,12 +873,10 @@ async function handleTicketClose(interaction) {
   setTimeout(() => interaction.channel.delete().catch(() => {}), 5000);
 }
 
-// /ticket close (slash)
 async function cmdTicketClose(i) {
   return handleTicketClose(i);
 }
 
-// /ticket add
 async function cmdTicketAdd(i) {
   await i.deferReply({ ephemeral: true });
   const user = i.options.getUser("user");
@@ -942,7 +898,6 @@ async function cmdTicketAdd(i) {
   await i.editReply({ content: `✅ Added <@${user.id}> to the ticket.` });
 }
 
-// /ticket remove
 async function cmdTicketRemove(i) {
   await i.deferReply({ ephemeral: true });
   const user = i.options.getUser("user");
@@ -1050,8 +1005,8 @@ async function checkExpiredSlots() {
 // ══════════════════════════════════════════════
 //  START
 // ══════════════════════════════════════════════
-if (!TOKEN || TOKEN === "PASTE_YOUR_BOT_TOKEN_HERE") {
-  console.error("❌ ERROR: Set DISCORD_TOKEN before running.");
+if (!TOKEN) {
+  console.error("❌ ERROR: DISCORD_TOKEN is missing from environment variables.");
   process.exit(1);
 }
 
