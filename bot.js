@@ -16,7 +16,7 @@ const path = require("path");
 // ══════════════════════════════════════════════
 //  CONFIG
 // ══════════════════════════════════════════════
-const TOKEN = process.env.DISCORD_TOKEN || "PUT_YOUR_NEW_TOKEN_HERE";
+const TOKEN = process.env.DISCORD_TOKEN || "MTUxODU2NTQ3MzU0Nzk4MDgwMQ.Gd3aZ4.xtcaeus_dkLALF_VKp-DLzcYGV4Dr1BGKbCQ0g";
 const GUILD_ID = process.env.GUILD_ID        || "1495786428490059866";
 const MOD_ROLE = process.env.MOD_ROLE        || "Slot Manager";
 const MAX_HERE = parseInt(process.env.MAX_HERE_PINGS || "2");
